@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Exams</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .countdown {
+            font-size: 24px;
+            font-weight: bold;
+            background-color: black;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .container {
+            width: 80%;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-size: 18px;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+        }
+        th {
+            background-color: aqua;
+			font-weight: bolder;
+			font-family: Amasis MT Pro Black;
+        }
+        td.day, td.date {
+            background-color: yellow;
+            font-weight: bolder;
+			font-family: Britannic Bold;
+        }
+        .green {
+            background-color: lightgreen !important;
+        }
+        .red {
+            background-color: red !important;
+            color: white;
+        }
+        input {
+            width: 60px;
+            text-align: center;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="countdown" id="countdown">Loading...</div>
+
+    <div class="container">
+        <h1>You Are The Best Ever. I am Proud Of You Whatever is The Result</h1>
+		<h1>💖💖💖💖💖💖</h1>
+        <h2>Final Exams</h2>
+
+        <table id="data-table">
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>Date</th>
+                    <th>Maril</th>
+                    <th>Bavly</th>
+                </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="2">Total</th>
+                    <th id="sum1">0</th>
+                    <th id="sum2">0</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <script>
+        const storageKey = "dataTableValues";
+        const targetDate = new Date(2025, 5, 10, 0, 0, 0);
+
+        function generateData() {
+            let startDate = new Date(2025, 2, 10);
+            let endDate = new Date(2025, 5, 10);
+            let tableBody = document.getElementById("table-body");
+            let storedData = JSON.parse(localStorage.getItem(storageKey)) || {};
+
+            while (startDate <= endDate) {
+                let row = document.createElement("tr");
+
+                let dayName = startDate.toLocaleDateString("en-US", { weekday: "long" });
+                let formattedDate = startDate.toLocaleDateString("en-US", { day: "2-digit", month: "short" });
+                let rowKey = formattedDate;
+
+                let val1 = storedData[rowKey]?.val1 ?? "";
+                let val2 = storedData[rowKey]?.val2 ?? "";
+
+                row.innerHTML = `
+                    <td class="day">${dayName}</td>
+                    <td class="date">${formattedDate}</td>
+                    <td><input type="number" min="0" value="${val1}" data-key="${rowKey}" data-col="val1" oninput="updateData(this)"></td>
+                    <td><input type="number" min="0" value="${val2}" data-key="${rowKey}" data-col="val2" oninput="updateData(this)"></td>
+                `;
+
+                tableBody.appendChild(row);
+                startDate.setDate(startDate.getDate() + 1);
+            }
+            restoreColors();
+            calculateSum();
+        }
+
+        function updateData(input) {
+            let rowKey = input.getAttribute("data-key");
+            let col = input.getAttribute("data-col");
+            let value = input.value === "" ? "" : parseInt(input.value) || 0;
+
+            let storedData = JSON.parse(localStorage.getItem(storageKey)) || {};
+            if (!storedData[rowKey]) {
+                storedData[rowKey] = {};
+            }
+
+            storedData[rowKey][col] = value;
+            localStorage.setItem(storageKey, JSON.stringify(storedData));
+
+            updateColor(input);
+            calculateSum();
+        }
+
+        function updateColor(input) {
+            let value = parseInt(input.value);
+            if (input.value === "") {
+                input.classList.remove("green", "red");
+            } else {
+                input.classList.toggle("green", value > 0);
+                input.classList.toggle("red", value === 0);
+            }
+        }
+
+        function restoreColors() {
+            let inputs = document.querySelectorAll("tbody input");
+            inputs.forEach(input => {
+                updateColor(input);
+            });
+        }
+
+        function calculateSum() {
+            let sum1 = 0, sum2 = 0;
+            let storedData = JSON.parse(localStorage.getItem(storageKey)) || {};
+
+            Object.values(storedData).forEach(row => {
+                sum1 += parseInt(row.val1) || 0;
+                sum2 += parseInt(row.val2) || 0;
+            });
+
+            document.getElementById("sum1").textContent = sum1;
+            document.getElementById("sum2").textContent = sum2;
+
+            document.getElementById("sum1").classList.toggle("green", sum1 >= sum2);
+            document.getElementById("sum1").classList.toggle("red", sum1 < sum2);
+
+            document.getElementById("sum2").classList.toggle("green", sum2 > sum1);
+            document.getElementById("sum2").classList.toggle("red", sum2 <= sum1);
+        }
+
+        function updateCountdown() {
+            let now = new Date();
+            let diff = targetDate - now;
+
+            if (diff <= 0) {
+                document.getElementById("countdown").innerHTML = "Time's up!";
+                return;
+            }
+
+            let days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            let hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            let minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            let seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            document.getElementById("countdown").innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        }
+
+        setInterval(updateCountdown, 1000);
+        generateData();
+    </script>
+
+</body>
+</html>
